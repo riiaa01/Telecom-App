@@ -1,4 +1,3 @@
-authenticate.js
 const authenticate = (req, res, next) => {
     if (req.query.header === 'abc@gmail') {
         next();
