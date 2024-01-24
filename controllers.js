@@ -8,14 +8,12 @@ const UserController = {
 
     rootController: async (req, res, next) => {
         try {
-            // Fetch plan names from the MongoDB 'plans' collection
             const plans = await Plan.find({}, 'planName');
             console.log(plans);
-            // Extract plan names from the result
+
             const planNames = plans.map(plan => plan.planName);
             console.log(planNames);
  
-            // Send the plan names as the response
             res.send(`All available mobile plans: ${planNames.join(', ')}`);
         } catch (error) {
             console.error('Error fetching plan names:', error.message);
