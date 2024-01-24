@@ -1,9 +1,26 @@
 const userService = require('./services');
- 
+const Plan = require('./models/plans');
 const UserController = {
  
-    rootController:(req, res, next)=>{
-        res.send("All available mobile plans: <ul><li>Truly unlimited</li><li>Data</li><li>Talktime(Top Up Voucher)</li><li>Entertainment</li></ul> ");
+    // rootController:(req, res, next)=>{
+    //     res.send("All available mobile plans: <ul><li>Truly unlimited</li><li>Data</li><li>Talktime(Top Up Voucher)</li><li>Entertainment</li></ul> ");
+    // },
+
+    rootController: async (req, res, next) => {
+        try {
+            // Fetch plan names from the MongoDB 'plans' collection
+            const plans = await Plan.find({}, 'planName');
+            console.log(plans);
+            // Extract plan names from the result
+            const planNames = plans.map(plan => plan.planName);
+            console.log(planNames);
+ 
+            // Send the plan names as the response
+            res.send(`All available mobile plans: ${planNames.join(', ')}`);
+        } catch (error) {
+            console.error('Error fetching plan names:', error.message);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     },
  
     signupController: (req, res, next) => {
