@@ -115,7 +115,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
-    plans: [{
+    plansAssociated: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Plan',
     }],
