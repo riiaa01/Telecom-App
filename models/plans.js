@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
- 
+
+
 const planSchema = new mongoose.Schema({
     planCode: {
         type: String,
@@ -34,8 +35,11 @@ const planSchema = new mongoose.Schema({
         required: true,
     },
 });
- 
+
+
 const Plans = mongoose.model('Plan', planSchema);
- 
+
+
 module.exports = Plans;
- 
+
+
