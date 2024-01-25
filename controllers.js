@@ -17,7 +17,6 @@ const UserController = {
 
             const plans = await Plan.find({}, 'planName');
             console.log(plans);
-            // extract plan names from the result
             const planNames = plans.map(plan => plan.planName);
             console.log(planNames);
 
