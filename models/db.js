@@ -39,12 +39,11 @@
 
 // module.exports =  db;
 
-// database.js
 const mongoose = require('mongoose');
  
 const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb://0.0.0.0:27017/AirtelThanks', {
+        await mongoose.connect('mongodb://0.0.0.0:27017/MyAirtel', {
             useNewUrlParser: true,
             useUnifiedTopology: true
         });

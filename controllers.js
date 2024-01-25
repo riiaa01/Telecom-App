@@ -6,7 +6,6 @@ const Transaction = require('./models/transactions');
 
 const UserController = {
 
-
     // rootController:(req, res, next)=>{
     //     res.send("All available mobile plans: <ul><li>Truly unlimited</li><li>Data</li><li>Talktime(Top Up Voucher)</li><li>Entertainment</li></ul> ");
     // },
@@ -28,20 +27,15 @@ const UserController = {
         }
     },
 
-
     // signupController: (req, res, next) => {
     //     res.send("List of all plans associated with Riya: <ul><li>airtel xstream</li><li>airtel unlimited</li></ul>");
     // },
 
 
     signupController: async (req, res, next) => {
-        const userEmail = req.query.header; // Assuming the user's email is sent in the query parameter
-
-
+        const userEmail = req.query.header; 
         try {
-            // Find the user by email and populate the plansAssociated field
             const user = await User.findOne({ email: userEmail });
-
 
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
@@ -84,8 +78,6 @@ const UserController = {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     },
-
-
 
 
     userPlansController: (req, res, next) => {

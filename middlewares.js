@@ -1,5 +1,5 @@
 const authenticate = (req, res, next) => {
-    if (req.query.header === 'abc@gmail') {
+    if (req.query.header === 'ria@gmail.com') {
         next();
     } else {
         res.status(401).json({ error: 'Unauthorized' });
