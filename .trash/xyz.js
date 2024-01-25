@@ -1,16 +1,5 @@
-
-
-
-
-
-
-
-
-
-
-
-const userService = require('./services');
-const Plan = require('./models/plans');
+const userService = require('../services');
+const Plan = require('../models/plans');
 const UserController = {
  
     // rootController:(req, res, next)=>{
