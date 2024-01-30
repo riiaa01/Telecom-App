@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
-const User = require('./models/users');
-const Plan = require('./models/plans');
-const Transaction = require('./models/transactions');
+const User = require('../models/users');
+const Plan = require('../models/plans');
+const Transaction = require('../models/transactions');
  
 // Connect to MongoDB
 mongoose.connect('mongodb://0.0.0.0:27017/MyAirtel', {

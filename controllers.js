@@ -1,113 +1,129 @@
+const express = require('express');
+const app = express();
+const authenticate = require("./middlewares");
+app.use(express.json());
 const userService = require('./services');
 const User = require('./models/users');
 const Plan = require('./models/plans');
 const Transaction = require('./models/transactions');
-
-
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+ 
 const UserController = {
-
-
+ 
+   // landingPage:
+ 
     // rootController:(req, res, next)=>{
     //     res.send("All available mobile plans: <ul><li>Truly unlimited</li><li>Data</li><li>Talktime(Top Up Voucher)</li><li>Entertainment</li></ul> ");
     // },
-
-
-    rootController: async (req, res, next) => {
+ 
+ //working-signup, login, allPlans, 
+    signupController: async (req, res) => {
+        try{
+            const{
+                firstName, lastName, phoneNumber, username, email, password, address
+            } = req.body;
+            console.log(password);
+ 
+            if(!username|| !email|| !password){
+                return res.send("Please fill the required fields");
+            }
+            const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+ 
+            if (existingUser) {
+              return res.status(400).json({ error: 'Username or email already exists' });
+            }
+ 
+            const hashedPassword = await bcrypt.hash(password, 10);
+            console.log(hashedPassword);
+            const newUser= new User({
+            username,
+            email,
+            password: hashedPassword ,
+            firstName,
+            lastName,
+            phoneNumber,
+            address
+        });
+           
+        await newUser.save();
+            res.status(201).json({ message: 'User signed up successfully' });
+           // res.redirect('/login');
+          }
+          catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Signup failed' });
+          }
+    },
+ 
+ 
+    loginController:async (req, res)=>{
+        try {
+            const { email, password } = req.body;
+       
+            if (!email || !password) {
+              return res.status(400).json({ error: 'Email and password are required' });
+            }
+       
+         
+            const user = await User.findOne({ email });
+            if (!user) {
+              return res.status(401).json({ error: 'Invalid credentials' });
+            }
+       
+         
+            const passwordComp = await bcrypt.compare(password, user.password);
+            if (!passwordComp) {
+              return res.status(401).json({ error: 'Invalid credentials' });
+            }
+       
+            // Generate a JWT
+            const token = jwt.sign({ userId: user._id }, 'jwtkey', { expiresIn: '1h' });
+       
+            res.json({ message: 'Login successful', token });
+            //res.redirect("/myPlans");
+          } catch (error) {
+            console.error('Error during login:', error.message);
+            res.status(500).json({ error: 'Internal Server Error' });
+          }
+ 
+ 
+    },
+    
+    allPlansController: async (req, res) => {
         try {
             const plans = await Plan.find({}, 'planName');
             console.log(plans);
-            // Extract plan names from the result
+           
             const planNames = plans.map(plan => plan.planName);
-            console.log(planNames);
-
-
+            console.log('planName:'+planNames);
+ 
             res.send(`All available mobile plans: ${planNames.join(', ')}`);
         } catch (error) {
             console.error('Error fetching plan names:', error.message);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     },
-
-
-    // signupController: (req, res, next) => {
-    //     res.send("List of all plans associated with Riya: <ul><li>airtel xstream</li><li>airtel unlimited</li></ul>");
-    // },
-
-
-    signupController: async (req, res, next) => {
-        const userEmail = req.query.header; // Assuming the user's email is sent in the query parameter
-        //const userEmail = req.body;
-
-
+    userPlansController:async (req, res) => {
+       
         try {
-            const user = await User.findOne({ email: userEmail });
-
-
-            if (!user) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-
-
-//            Extract plan details from the populated plansAssociated field
-            // const associatedPlans = user.plansAssociated.map(plan => {
-            //     return {
-            //         planName: plan.planName, // Assuming a field named 'planName' in your Plan model
-            //         // Include other plan details as needed
-            //     };
-            // });
-            // console.log('Raw plansAssociated:', user.plansAssociated);
-
-
-            // const associatedPlans = user.plansAssociated.map(planId => planId.toString());
-
-
-            // console.log('Stringified plansAssociated:', associatedPlans);
+           
+           // const user = await User.findOne({ email: user.email });
+           const user = req.user;
+           console.log(user);
  
-            // const associatedPlans = await Promise.all(user.plansAssociated.map(async planId => {
-            //     const plan = await Plan.findById(planId);
-            //     return {
-            //         planName: plan ? plan.planName : 'Unknown Plan',  // Replace 'Unknown Plan' with a default value
-            //         // Include other plan details as needed
-            //     };
-            // }));
-
-
-            res.json({
-                status: 'success',
-                message: 'Sign Up Page',
-                result: {
-                    username: user.username,
-                    email: user.email
-                },
-            });
-        } catch (error) {
-            console.error('Error fetching user', error.message);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    },
-
-
-
-
-    userPlansController:async (req, res, next) => {
-        const userEmail = req.query.header;
-        try {
-           
-            const user = await User.findOne({ email: userEmail });
-           
+ 
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
             }
-
-
+ 
             const associatedPlans = await Promise.all(user.plansAssociated.map(async planId => {
                 const plan = await Plan.findById(planId);
                 return {
-                    planName: plan ? plan.planName : 'Unknown Plan',  // Replace 'Unknown Plan' with a default value
+                    planName: plan ? plan.planName : 'Unknown Plan',  
                 };
             }));
-
-
+ 
             console.log(associatedPlans);
             res.json({
                 status: 'success',
@@ -119,30 +135,32 @@ const UserController = {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     },
-
-
-
-
+ 
+ 
     purchasePlanController: async (req, res) => {
         try {
-            const { username, planCode } = req.body;
+            const user=req.user;
+            const  planCode  = req.body;
    
-            if (!username || !planCode) {
+            if (!user || !planCode) {
                 return res.status(400).json({ error: 'Username and planCode are required' });
             }
    
-            const user = await User.findOne({ username });
+            // Find user by username
+            //const user = await User.findOne({ username });
    
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
             }
    
+            // Find plan by planCode
             const plan = await Plan.findOne({ planCode });
    
             if (!plan) {
                 return res.status(404).json({ error: 'Plan not found' });
             }
-
+   
+            // Check if the user already has the plan
             if (user.plansAssociated.includes(plan._id)) {
                 return res.status(400).json({ error: 'User already has this plan' });
             }else{
@@ -150,7 +168,7 @@ const UserController = {
                 await user.save();
             }
            
-            // new transaction
+            // Create a new transaction
             const transaction = new Transaction({
                 user: user._id,
                 plan: plan._id,
@@ -158,7 +176,7 @@ const UserController = {
             });
             await transaction.save();
    
-            // updated plansAssociated for the user
+            // Fetch the updated plansAssociated for the user
             const updatedUser = await User.findById(user._id).populate('plansAssociated');
            
             const associatedPlans = updatedUser.plansAssociated.map(plan => {
@@ -186,31 +204,33 @@ const UserController = {
     // dateof activation+validity days=date-date.now<=7
     expiringPlansController: async (req, res, next) => {
         try {
-       
+            // Calculate the date 7 days from now
             const sevenDaysFromNow = new Date();
             sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
    
-         
+            // Find transactions set to expire in the next 7 days
             const expiringTransactions = await Transaction.find({
-                activationDate: { $lte: sevenDaysFromNow },//comparison
+                activationDate: { $lte: sevenDaysFromNow },
             }).populate('user plan');
    
+            // Prepare the response
             const expiringPlansDetails = expiringTransactions.map(transaction => {
                 const { plan, activationDate, user } = transaction;
                
-                // expiration date based on plan's validity
+                // Calculate expiration date based on plan's validity
                 const expirationDate = new Date(activationDate);
                 expirationDate.setDate(expirationDate.getDate() + plan.validity);
    
                 const daysUntilExpiration = Math.ceil((expirationDate - new Date()) / (1000 * 60 * 60 * 24));
    
                 return {
-                    planName: plan.planName,
+                    planName: plan.planName, // Assuming a field named 'planName' in your Plan model
                     expiryDate: expirationDate,
                     daysUntilExpiration: daysUntilExpiration,
                     userDetails: {
                         username: user.username,
                         email: user.email,
+                        // Include other user details as needed
                     },
                 };
             });
@@ -225,38 +245,6 @@ const UserController = {
             res.status(500).json({ error: 'Internal Server Error' });
         }
     },
-   
-   
-
-
-    getAllUsers: (req, res, next) => {
-        const users = userService.getAllUsers();
-        res.json(users);
-    },
-
-
-    getUserById: (req, res, next) => {
-        const userId = req.params.userId;
-        const user = userService.getUserById(userId);
-
-
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-
-        res.json(user);
-    },
 };
-
-
+ 
 module.exports = UserController;
-
-
-
-
-
-
-
-
-
