@@ -1,7 +1,11 @@
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 const authenticate = require("./middlewares");
 app.use(express.json());
+
 const userService = require('./services');
 const User = require('./models/users');
 const Plan = require('./models/plans');
@@ -110,19 +114,21 @@ const UserController = {
            
            // const user = await User.findOne({ email: user.email });
            const user = req.user;
-           console.log(user);
+           console.log('Userz:' +user);
  
  
             if (!user) {
                 return res.status(404).json({ error: 'User not found' });
             }
- 
-            const associatedPlans = await Promise.all(user.plansAssociated.map(async planId => {
+            console.log('plansAssociated' +user.plansAssociated);
+           
+            const associatedPlans = await Promise.all((user.plansAssociated || []).map(async planId => {
                 const plan = await Plan.findById(planId);
                 return {
-                    planName: plan ? plan.planName : 'Unknown Plan',  
+                    planName: plan ? plan.planName : 'Unknown Plan',
                 };
             }));
+            
  
             console.log(associatedPlans);
             res.json({
