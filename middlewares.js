@@ -28,32 +28,32 @@
 //   };
   
 const jwt = require('jsonwebtoken');
-const express = require('express');
-const app = express();
-const bodyParser = require('body-parser');
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.json())
- 
-const authenticate = (req, res, next) => {
- 
-  const token = req.headers.authorization;
- 
+const User = require('./models/users');
+const config= require('./config.js');
+
+const authenticate = async (req, res, next) => {
+const token = req.headers.authorization;
+
+
   if (!token) {
     return res.status(401).json({ error: 'Unauthorized - Missing token' });
   }
- 
-  jwt.verify(token, 'jwtkey', (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: 'Unauthorized - Invalid token' });
-    }
-console.log(decoded);
-    req.user = { userId: decoded.userId };
-    next();
-  });
-};
- 
- 
-module.exports = authenticate;
 
+
+  try {
+    const decoded = jwt.verify(token, config.secretKey);
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    req.user = user;
+    next();
+  } 
+  catch (err) {
+    return res.status(401).json({ error: 'Unauthorized - Invalid token' });
+  }
+};
+
+
+module.exports = authenticate;
   

@@ -15,6 +15,10 @@ const transactionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    activationDate: {
+        type: Date,
+        default: Date.now,
+    },
     amount: {
         type: Number,
         required: true,
