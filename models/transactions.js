@@ -19,10 +19,27 @@ const transactionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    expirationDate:{
+        type: Date,
+        default: function () {
+            if (this.plan && this.activationDate) {
+              const Plan = mongoose.model('Plan');
+              return Plan.findById(this.plan).then((plan) => {
+                if (plan && plan.validity) {
+                  return new Date(this.activationDate.getTime() + plan.validity * 24 * 60 * 60 * 1000);
+                }
+              });
+            }
+          },  
+    },
     amount: {
         type: Number,
         required: true,
     },
+    statusOfPlan:{
+        type: String,
+        required:true,
+    }
 });
  
 const Transactions = mongoose.model('Transaction', transactionSchema);
