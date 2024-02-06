@@ -36,10 +36,6 @@ const transactionSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    statusOfPlan:{
-        type: String,
-        required:true,
-    }
 });
  
 const Transactions = mongoose.model('Transaction', transactionSchema);

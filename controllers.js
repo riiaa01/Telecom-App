@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 const config= require("./config.js");
 const User = require("./models/users");
@@ -9,6 +8,7 @@ const Plan = require("./models/plans");
 const Transaction = require("./models/transactions");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const Plans = require("./models/plans");
 
 // const UserController = {
 //   // landingPage:
@@ -401,27 +401,12 @@ const UserController = {
  
   allPlansController: async (req, res) => {
     try {
-      const plans = await Plan.find();
-
-
-      const plansDetails = plans.map(plan => {
-        return {
-          planName: plan.planName,
-          price: plan.price,
-          validity: plan.validity,
-          planCode: plan.planCode,
-          description: plan.description,
-          dataLimit: plan.dataLimit,
-          talktimeLimit: plan.talktimeLimit,
-          smsLimit: plan.smsLimit
-        };
-      });
-
-
+      const plans = await Plan.find().lean();
+      
       res.json({
         status: 'success',
         message: 'All Plans Details',
-        results: plansDetails,
+        results: plans,
       });
     } catch (error) {
       console.error('Error fetching plan details:', error.message);
@@ -429,42 +414,52 @@ const UserController = {
     }
   },
 
-  userPlansController: async (req, res) => {
-
-
-        try {
-            const user = req.user;
-            console.log('req.user:', user);
-
-            if (!user) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-
-
-            const associatedPlans = await Promise.all(user.plansAssociated.map(async planId => {
-                const plan = await Plan.findById(planId);
-                const transaction = await Transaction.findOne({ user: user._id, plan: planId });
-                return {
-                    planName: plan ? plan.planName : 'Unknown Plan',
-                    statusOfPlan: transaction ? transaction.statusOfPlan : 'Unknown Status',
-                  };
-            }));
-
-
-            console.log(associatedPlans);
-            res.json({
-                status: 'success',
-                message: `${user.username}'s Plans`,
-                results: associatedPlans,
-
-
-            });
-        } catch (error) {
-            console.error('Error fetching user plans:', error.message);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    },
-
+userPlansController: async (req, res) => {
+    try {
+      const { username, email } = req.body;
+ 
+      const user = await User.findOne({ $or: [{ username }, { email }] });
+ 
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+ 
+      const transactions = await Transaction.find({ user: user._id }).populate('plan');
+ 
+      const associatedPlans = transactions.map(transaction => {
+        const { plan, activationDate, expirationDate } = transaction;
+        const planStatus = (activationDate, expirationDate) => {
+          const currentDate = Date.now();
+       
+          if (activationDate > currentDate) {
+            return "Upcoming";
+          } else if (currentDate >= activationDate && currentDate <= expirationDate) {
+            return "Active";
+          } else {
+            return "Expired";
+          }
+        };
+ 
+        return {
+          planName: plan.planName,
+          statusOfPlan: planStatus(activationDate, expirationDate),
+        };
+      });
+ 
+      res.json({
+        message: 'User plans retrieved successfully',
+        user: {
+          username: user.username,
+          email: user.email,
+          associatedPlans,
+        },
+      });
+    } catch (error) {
+      console.error('Error fetching user plans:', error.message);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  },
+ 
   //handling single plan
   purchasePlanController: async (req, res) => {
     try {
@@ -499,24 +494,22 @@ const UserController = {
       user.plansAssociated.push(plan._id);
       await user.save();
      
-      ////
-      const activationDate=Date.now();
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + plan.validity);
+      // const activationDate=Date.now(); //integer format mn return krega date
+      // const expirationDate = new Date(); //returns in object formate, string can be retrieved from above
+      // expirationDate.setDate(expirationDate.getDate() + plan.validity);
 
 
-      const planStatus = (activationDate, expirationDate) => {
-        const currentDate = Date.now();
+      // const planStatus = (activationDate, expirationDate) => {
+      //   const currentDate = Date.now();
      
-        if (activationDate > currentDate) {
-          return "Upcoming";
-        } else if (currentDate >= activationDate && currentDate <= expirationDate) {
-          return "Active";
-        } else {
-          return "Expired";
-        }
-      };
-
+      //   if (activationDate > currentDate) {
+      //     return "Upcoming";
+      //   } else if (currentDate >= activationDate && currentDate <= expirationDate) {
+      //     return "Active";
+      //   } else {
+      //     return "Expired";
+      //   }
+      // };
 
       const transaction = new Transaction({
         user: user._id,
@@ -524,15 +517,12 @@ const UserController = {
         amount: plan.price,
         activationDate,
         expirationDate,
-        statusOfPlan: planStatus(activationDate, expirationDate),
+       // statusOfPlan: planStatus(activationDate, expirationDate),
       });
       await transaction.save();
 
 
-      // Fetch the updated plansAssociated for the user
       const updatedUser = await User.findById(user._id).populate('plansAssociated');
-
-
       const associatedPlans = updatedUser.plansAssociated.map(plan => {
         return {
           planName: plan.planName,
@@ -548,7 +538,7 @@ const UserController = {
           username: updatedUser.username,
           email: updatedUser.email,
           associatedPlans: associatedPlans,
-          statusOfPlan: planStatus(activationDate,expirationDate),
+         // statusOfPlan: planStatus(activationDate,expirationDate),
         },
       });
     } catch (error) {

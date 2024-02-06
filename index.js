@@ -3,9 +3,7 @@ const bodyParser = require('body-parser');
 const config= require('./config.js');
 const app = express();
 const PORT = config.port;
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.json())
 const routes = require("./routes");
 const connectDB = require("./models/db");
 app.use("/", routes);
