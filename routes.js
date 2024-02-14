@@ -38,5 +38,7 @@ router.get("/myPlans", authenticate, controller.userPlansController);
 router.get("/expiringPlans",authenticate, controller.expiringPlansController);
  
 router.post('/purchase', authenticate,  controller.purchasePlanController);
+
+//router.get('/sendEmail', authenticate,  controller.purchasePlanController);
  
 module.exports = router;

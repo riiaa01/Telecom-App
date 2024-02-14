@@ -311,3 +311,11 @@ const UserController = {
 };
 
 module.exports = UserController;
+
+
+
+      //Construct response object
+      // const groupedPlans = {};
+      // transactions.forEach(doc => {
+      //   groupedPlans[doc._id] = doc.plans;
+      // });

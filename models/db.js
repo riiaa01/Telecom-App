@@ -40,10 +40,12 @@
 // module.exports =  db;
 
 const mongoose = require('mongoose');
+const { connectionLink } = require('../config');
  
 const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb://0.0.0.0:27017/MyAirtel', {
+      //  await mongoose.connect('mongodb://0.0.0.0:27017/MyAirtel', {//put the url in config
+      await mongoose.connect(connectionLink, {
             useNewUrlParser: true,
             useUnifiedTopology: true
         });

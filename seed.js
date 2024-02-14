@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
-const User = require('../models/users');
-const Plan = require('../models/plans');
-const Transaction = require('../models/transactions');
+const User = require('./models/users');
+const Plan = require('./models/plans');
+const Transaction = require('./models/transactions');
  
 // Connect to MongoDB
-mongoose.connect('mongodb://0.0.0.0:27017/MyAirtel', {
+mongoose.connect('mongodb+srv://riya:Riya_12345@cluster0.u0xz4bw.mongodb.net/MyAirtel?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
@@ -13,7 +13,7 @@ mongoose.connect('mongodb://0.0.0.0:27017/MyAirtel', {
 // insert sample data
 const insertSampleData = async () => {
     try {
-        const usersData = [
+       // const usersData = [
             // {
             //     username: 'ria_sng',
             //     email: 'ria@gmail.com',
@@ -35,17 +35,17 @@ const insertSampleData = async () => {
             //     address: '456 Oak St, Townsville',
             //     plans: [], // Empty plans array for now
             //   },
-              {
-                username: 'john_doe',
-                email: 'john.doe@example.com',
-                password: 'password123',
-                firstName: 'John',
-                lastName: 'Doe',
-                phoneNumber: '1234567890',
-                address: '123 Main St, Cityville',
-                plans: [], 
-              },
-        ];
+        //       {
+        //         username: 'john_doe',
+        //         email: 'john.doe@example.com',
+        //         password: 'password123',
+        //         firstName: 'John',
+        //         lastName: 'Doe',
+        //         phoneNumber: '1234567890',
+        //         address: '123 Main St, Cityville',
+        //         plans: [], 
+        //       },
+        // ];
  
        
         const plansData = [
@@ -82,8 +82,8 @@ const insertSampleData = async () => {
         ];
  
         // user insertion
-        const insertedUsers = await User.insertMany(usersData);
-        console.log('Inserted Users:', insertedUsers);
+        // const insertedUsers = await User.insertMany(usersData);
+        // console.log('Inserted Users:', insertedUsers);
  
       
         const insertedPlans = await Plan.insertMany(plansData);
@@ -94,18 +94,18 @@ const insertSampleData = async () => {
         const planId = insertedPlans[0]._id;
  
        
-        const transactionsData = [
-            {
-                user: userId,
-                plan: planId,
-                amount: 20,
-            },
+        // const transactionsData = [
+        //     {
+        //         user: userId,
+        //         plan: planId,
+        //         amount: 20,
+        //     },
             
-        ];
+        // ];
  
-        // Insert transactions
-        const insertedTransactions = await Transaction.insertMany(transactionsData);
-        console.log('Inserted Transactions:', insertedTransactions);
+        // // Insert transactions
+        // const insertedTransactions = await Transaction.insertMany(transactionsData);
+        // console.log('Inserted Transactions:', insertedTransactions);
     } catch (error) {
         console.error('Error inserting sample data:', error.message);
     } finally {
