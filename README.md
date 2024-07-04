@@ -1,1 +1,1 @@
-This is telecom-app prototype
+This is a telecom-app prototype
